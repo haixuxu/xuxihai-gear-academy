@@ -49,7 +49,7 @@ pub struct IoGameState {
     pub pebbles_remaining: u32,
     pub difficulty: DifficultyLevel,
     pub first_player: Player,
-    pub program_lastmove:u32,
+    pub program_lastmove: u32,
     pub winner: Option<Player>,
 }
 
