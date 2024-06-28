@@ -1,0 +1,27 @@
+
+
+[package]
+name = "pebbles-game"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+gstd = { version = "1", features = ["debug"] }
+scale-info = { version = "2", default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "full"] }
+pebbles-game-io = { path = "io" }
+
+
+[build-dependencies]
+gear-wasm-builder = { version = "1" }
+pebbles-game-io = { path = "io" }
+
+[dev-dependencies]
+gtest = { version = "1" }
+pebbles-game-io = { path = "io" }
+rand = "0.8"
+
+[workspace]
+members = [
+# "state",
+]
