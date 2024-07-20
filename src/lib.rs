@@ -1,6 +1,6 @@
 #![no_std]
 
-use gstd::{debug, exec, msg, prelude::*};
+use gstd::{debug, msg, prelude::*};
 use pebbles_game_io::*;
 
 #[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
@@ -39,10 +39,7 @@ impl PebbleGame {
     fn program_move(&mut self) {
         let mut count = 1;
         if self.max_pebbles_per_turn != 1 {
-            count = program_turn_gen(self.difficulty.clone(), self.max_pebbles_per_turn);
-        }
-        if count > self.pebbles_remaining {
-            count = self.pebbles_remaining;
+            count = program_turn_gen(self.difficulty.clone(),self.pebbles_remaining, self.max_pebbles_per_turn);
         }
         self.pebbles_remaining -= count;
         self.program_lastmove = count;
@@ -51,7 +48,7 @@ impl PebbleGame {
             msg::reply(PebblesEvent::Won(Player::Program), 0).unwrap();
             return;
         }
-        debug!("turncount=={}", self.pebbles_count - self.pebbles_remaining);
+        // debug!("turncount=={}", self.pebbles_count - self.pebbles_remaining);
         msg::reply(PebblesEvent::CounterTurn(count), 0).unwrap();
     }
     fn restart(
@@ -130,30 +127,4 @@ extern "C" fn handle() {
 extern "C" fn state() {
     let gmst = unsafe { PEBBLE_GAME.get_or_insert(Default::default()) };
     msg::reply(gmst.clone(), 0).expect("Failed to share state");
-}
-
-pub fn get_random_u32() -> u32 {
-    let salt = msg::id();
-    let (hash, _num) = exec::random(salt.into()).expect("get_random_u32(): random call failed");
-    u32::from_le_bytes([hash[0], hash[1], hash[2], hash[3]])
-}
-
-// 程序生成数
-pub fn program_turn_gen(difficulty: DifficultyLevel, max_per_turn: u32) -> u32 {
-    match difficulty {
-        DifficultyLevel::Easy => {
-            let mut count = get_random_u32() % max_per_turn;
-            count += 1;
-            count
-        }
-        DifficultyLevel::Hard => {
-            let mut count = get_random_u32() % max_per_turn;
-            if count / 2 < max_per_turn {
-                // 远离max_per_turn范围的数字重新来随机一次, 让程序更容易win
-                count = get_random_u32() % max_per_turn;
-            }
-            count += 1;
-            count
-        }
-    }
 }

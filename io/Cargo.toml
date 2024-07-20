@@ -9,3 +9,4 @@ gmeta = { version = "1" }
 gstd = { version = "1" }
 scale-info = { version = "2", default-features = false, features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "full"] }
+getrandom = { version = "0.2", features = ["js"] }

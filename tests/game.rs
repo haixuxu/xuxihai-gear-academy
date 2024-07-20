@@ -5,6 +5,14 @@ use pebbles_game_io::*;
 
 const USERS: &[u64] = &[3, 4, 5];
 
+#[cfg(test)]
+pub fn get_random_u32() -> u32 {
+    use getrandom::getrandom;
+    let mut buffer = [0u8; 4];
+    getrandom(&mut buffer).expect("Failed to generate random number");
+    u32::from_ne_bytes(buffer)
+}
+
 fn init_game(sys: &System, total: u32, turn_max: u32) {
     sys.init_logger();
 
@@ -64,45 +72,51 @@ fn init_failed() {
 }
 
 #[test]
+fn restart() {
+    let sys = System::new();
+    init_game(&sys, 3, 1);
+    let game = sys.get_program(1).unwrap();
+    let res = game.send(
+        USERS[0],
+        PebblesAction::Restart {
+            difficulty: DifficultyLevel::Easy,
+            pebbles_count: 50,
+            max_pebbles_per_turn: 3,
+        },
+    );
+    assert!(!res.main_failed());
+    let gmstate: PebbleGame = game.read_state(0).expect("Invalid state.");
+    assert_eq!(gmstate.pebbles_count, 50);
+    assert_eq!(gmstate.max_pebbles_per_turn, 3);
+}
+
+#[test]
 fn user_move() {
     let sys = System::new();
     init_game(&sys, 101, 3);
     let game = sys.get_program(1).unwrap();
-    let gmstate: PebbleGame = game.read_state(0).expect("Invalid state.");
-    let mut remaing = gmstate.pebbles_remaining;
 
-    let res = game.send(USERS[0], PebblesAction::Turn(1));
-    let gmstate: PebbleGame = game.read_state(0).expect("Invalid state.");
-    assert!(res.contains(&(
-        USERS[0],
-        PebblesEvent::CounterTurn(gmstate.program_lastmove).encode()
-    )));
-    assert_eq!(
-        gmstate.pebbles_remaining,
-        remaing - 1 - gmstate.program_lastmove
-    );
-    remaing = gmstate.pebbles_remaining;
-    let res = game.send(USERS[0], PebblesAction::Turn(2));
-    let gmstate: PebbleGame = game.read_state(0).expect("Invalid state.");
-    assert!(res.contains(&(
-        USERS[0],
-        PebblesEvent::CounterTurn(gmstate.program_lastmove).encode()
-    )));
-    assert_eq!(
-        gmstate.pebbles_remaining,
-        remaing - 2 - gmstate.program_lastmove
-    );
-    remaing = gmstate.pebbles_remaining;
-    let res = game.send(USERS[0], PebblesAction::Turn(3));
-    let gmstate: PebbleGame = game.read_state(0).expect("Invalid state.");
-    assert!(res.contains(&(
-        USERS[0],
-        PebblesEvent::CounterTurn(gmstate.program_lastmove).encode()
-    )));
-    assert_eq!(
-        gmstate.pebbles_remaining,
-        remaing - 3 - gmstate.program_lastmove
-    );
+    for _ in 0..100 {
+        game.send(
+            USERS[0],
+            PebblesAction::Restart {
+                difficulty: DifficultyLevel::Easy,
+                pebbles_count: 101,
+                max_pebbles_per_turn: 10,
+            },
+        );
+        let mut count = get_random_u32() % 10;
+        count += 1;
+        let gmstate1: PebbleGame = game.read_state(0).expect("Invalid state.");
+        let remaining = gmstate1.pebbles_remaining;
+        let res = game.send(USERS[0], PebblesAction::Turn(count));
+        let gmstate2: PebbleGame = game.read_state(0).expect("Invalid state.");
+        assert!(res.contains(&(USERS[0], PebblesEvent::CounterTurn(gmstate2.program_lastmove).encode())));
+        assert_eq!(
+            gmstate2.pebbles_remaining,
+            remaining - count - gmstate2.program_lastmove
+        );
+    }
 }
 
 #[test]
@@ -146,41 +160,30 @@ fn program_move() {
     let sys = System::new();
     init_game(&sys, 99, 3);
     let game = sys.get_program(1).unwrap();
-    let gmstate: PebbleGame = game.read_state(0).expect("Invalid state.");
-    let mut remaing = gmstate.pebbles_remaining;
 
-    let res = game.send(USERS[0], PebblesAction::GiveUp);
-    let gmstate: PebbleGame = game.read_state(0).expect("Invalid state.");
-    assert!(res.contains(&(
-        USERS[0],
-        PebblesEvent::CounterTurn(gmstate.program_lastmove).encode()
-    )));
-    assert_eq!(
-        gmstate.pebbles_remaining,
-        remaing - gmstate.program_lastmove
-    );
-    remaing = gmstate.pebbles_remaining;
-    let res = game.send(USERS[0], PebblesAction::GiveUp);
-    let gmstate: PebbleGame = game.read_state(0).expect("Invalid state.");
-    assert!(res.contains(&(
-        USERS[0],
-        PebblesEvent::CounterTurn(gmstate.program_lastmove).encode()
-    )));
-    assert_eq!(
-        gmstate.pebbles_remaining,
-        remaing - gmstate.program_lastmove
-    );
-    remaing = gmstate.pebbles_remaining;
-    let res = game.send(USERS[0], PebblesAction::GiveUp);
-    let gmstate: PebbleGame = game.read_state(0).expect("Invalid state.");
-    assert!(res.contains(&(
-        USERS[0],
-        PebblesEvent::CounterTurn(gmstate.program_lastmove).encode()
-    )));
-    assert_eq!(
-        gmstate.pebbles_remaining,
-        remaing - gmstate.program_lastmove
-    );
+    for _ in 0..100 {
+        game.send(
+            USERS[0],
+            PebblesAction::Restart {
+                difficulty: DifficultyLevel::Easy,
+                pebbles_count: 100,
+                max_pebbles_per_turn: 5,
+            },
+        );
+
+        let gmstate: PebbleGame = game.read_state(0).expect("Invalid state.");
+        let remaing = gmstate.pebbles_remaining;
+        let res = game.send(USERS[0], PebblesAction::GiveUp);
+        let gmstate2: PebbleGame = game.read_state(0).expect("Invalid state.");
+        assert!(res.contains(&(
+            USERS[0],
+            PebblesEvent::CounterTurn(gmstate2.program_lastmove).encode()
+        )));
+        assert_eq!(
+            gmstate2.pebbles_remaining,
+            remaing - gmstate2.program_lastmove
+        );
+    }
 }
 
 #[test]
@@ -210,23 +213,4 @@ fn winner() {
             assert!(res.contains(&(USERS[0], PebblesEvent::Won(Player::User).encode())));
         }
     }
-}
-
-#[test]
-fn restart() {
-    let sys = System::new();
-    init_game(&sys, 3, 1);
-    let game = sys.get_program(1).unwrap();
-    let res = game.send(
-        USERS[0],
-        PebblesAction::Restart {
-            difficulty: DifficultyLevel::Easy,
-            pebbles_count: 50,
-            max_pebbles_per_turn: 3,
-        },
-    );
-    assert!(!res.main_failed());
-    let gmstate: PebbleGame = game.read_state(0).expect("Invalid state.");
-    assert_eq!(gmstate.pebbles_count, 50);
-    assert_eq!(gmstate.max_pebbles_per_turn, 3);
 }
