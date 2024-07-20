@@ -49,9 +49,9 @@ pub struct IoGameState {
     pub pebbles_count: u32,
     pub max_pebbles_per_turn: u32,
     pub pebbles_remaining: u32,
+    pub program_lastmove: u32,
     pub difficulty: DifficultyLevel,
     pub first_player: Player,
-    pub program_lastmove: u32,
     pub winner: Option<Player>,
 }
 

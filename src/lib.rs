@@ -122,9 +122,34 @@ extern "C" fn handle() {
     }
 }
 
-// The `state()` entry point.
+
 #[no_mangle]
 extern "C" fn state() {
-    let gmst = unsafe { PEBBLE_GAME.get_or_insert(Default::default()) };
-    msg::reply(gmst.clone(), 0).expect("Failed to share state");
+    let staking = unsafe { PEBBLE_GAME.take().expect("Unexpected error in taking state") };
+    msg::reply::<IoGameState>(staking.into(), 0)
+        .expect("Failed to encode or reply with `IoGameState` from `state()`");
+}
+
+impl From<PebbleGame> for IoGameState {
+    fn from(value: PebbleGame) -> Self {
+        let PebbleGame {
+             pebbles_count,
+             max_pebbles_per_turn,
+             pebbles_remaining,
+             program_lastmove,
+             difficulty,
+             first_player,
+             winner,
+        } = value;
+
+        Self {
+            pebbles_count,
+            max_pebbles_per_turn,
+            pebbles_remaining,
+            program_lastmove,
+            difficulty,
+            first_player,
+            winner,
+        }
+    }
 }
