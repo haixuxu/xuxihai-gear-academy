@@ -52,7 +52,7 @@ impl PebbleGame {
             msg::reply(PebblesEvent::Won(Player::Program), 0).unwrap();
             return;
         }
-        // debug!("turncount=={}", self.pebbles_count - self.pebbles_remaining);
+        debug!("turncount=={}", self.pebbles_count - self.pebbles_remaining);
         msg::reply(PebblesEvent::CounterTurn(count), 0).unwrap();
     }
     fn restart(

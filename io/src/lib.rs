@@ -86,36 +86,23 @@ pub fn get_random_u32() -> u32 {
 
 // 程序生成数
 pub fn program_turn_gen(difficulty: DifficultyLevel, remaining: u32, max_per_turn: u32) -> u32 {
+    if remaining < max_per_turn {
+        return remaining;
+    }
+    if max_per_turn == 1 {
+        return 1;
+    }
     match difficulty {
         DifficultyLevel::Easy => {
-            let mut count;
-            if remaining <= max_per_turn {
-                return remaining;
-            }
-            loop {
-                count = get_random_u32() % max_per_turn;
-                count += 1;
-                if count <= remaining {
-                    break;
-                }
-            }
+            let mut count = get_random_u32() % max_per_turn;
+            count += 1;
             count
         }
         DifficultyLevel::Hard => {
-            let mut count: u32;
-            if remaining <= max_per_turn {
-                return remaining;
-            }
-            loop {
-                count = get_random_u32() % max_per_turn;
-                count += 1;
-
-                if count > remaining {
-                    continue;
-                }
-                let next_remaining = remaining - count;
-                // 让程序选择后剩下的为n*k+1, 最后一次用户选时(k+1), 用户难度加大
-                if next_remaining % max_per_turn == 1 {
+            let mut count: u32 = 1;
+            for val in 1..max_per_turn {
+                if (remaining - val) % max_per_turn == 1 {
+                    count = val;
                     break;
                 }
             }

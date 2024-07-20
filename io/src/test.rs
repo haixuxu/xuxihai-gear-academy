@@ -11,5 +11,15 @@ fn program_gen_count() {
         assert_eq!(count3, 4); // 96=5n+1
         let count4 = program_turn_gen(DifficultyLevel::Hard, 5, 10);
         assert_eq!(count4, 5);
+
+        let count4 = program_turn_gen(DifficultyLevel::Hard, 5, 1);
+        assert_eq!(count4, 1);
+
+        let count4 = program_turn_gen(DifficultyLevel::Easy, 5, 1);
+        assert_eq!(count4, 1);
+
+        let count4 = program_turn_gen(DifficultyLevel::Easy, 0, 3);
+        assert_eq!(count4, 0);
+
     }
 }
