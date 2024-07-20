@@ -111,7 +111,10 @@ fn user_move() {
         let remaining = gmstate1.pebbles_remaining;
         let res = game.send(USERS[0], PebblesAction::Turn(count));
         let gmstate2: PebbleGame = game.read_state(0).expect("Invalid state.");
-        assert!(res.contains(&(USERS[0], PebblesEvent::CounterTurn(gmstate2.program_lastmove).encode())));
+        assert!(res.contains(&(
+            USERS[0],
+            PebblesEvent::CounterTurn(gmstate2.program_lastmove).encode()
+        )));
         assert_eq!(
             gmstate2.pebbles_remaining,
             remaining - count - gmstate2.program_lastmove

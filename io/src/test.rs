@@ -1,6 +1,4 @@
-
 use super::*;
-
 
 #[test]
 fn program_gen_count() {

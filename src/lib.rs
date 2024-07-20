@@ -39,7 +39,11 @@ impl PebbleGame {
     fn program_move(&mut self) {
         let mut count = 1;
         if self.max_pebbles_per_turn != 1 {
-            count = program_turn_gen(self.difficulty.clone(),self.pebbles_remaining, self.max_pebbles_per_turn);
+            count = program_turn_gen(
+                self.difficulty.clone(),
+                self.pebbles_remaining,
+                self.max_pebbles_per_turn,
+            );
         }
         self.pebbles_remaining -= count;
         self.program_lastmove = count;
@@ -122,10 +126,13 @@ extern "C" fn handle() {
     }
 }
 
-
 #[no_mangle]
 extern "C" fn state() {
-    let staking = unsafe { PEBBLE_GAME.take().expect("Unexpected error in taking state") };
+    let staking = unsafe {
+        PEBBLE_GAME
+            .take()
+            .expect("Unexpected error in taking state")
+    };
     msg::reply::<IoGameState>(staking.into(), 0)
         .expect("Failed to encode or reply with `IoGameState` from `state()`");
 }
@@ -133,13 +140,13 @@ extern "C" fn state() {
 impl From<PebbleGame> for IoGameState {
     fn from(value: PebbleGame) -> Self {
         let PebbleGame {
-             pebbles_count,
-             max_pebbles_per_turn,
-             pebbles_remaining,
-             program_lastmove,
-             difficulty,
-             first_player,
-             winner,
+            pebbles_count,
+            max_pebbles_per_turn,
+            pebbles_remaining,
+            program_lastmove,
+            difficulty,
+            first_player,
+            winner,
         } = value;
 
         Self {
