@@ -1,5 +1,7 @@
 #![no_std]
 
+mod test;
+
 use gstd::{debug, msg, prelude::*};
 use pebbles_game_io::*;
 
@@ -157,6 +159,51 @@ impl From<PebbleGame> for IoGameState {
             difficulty,
             first_player,
             winner,
+        }
+    }
+}
+
+#[cfg(not(test))]
+pub fn get_random_u32() -> u32 {
+    use gstd::{exec, msg};
+
+    let salt = msg::id();
+    let (hash, _num) = exec::random(salt.into()).expect("internal error: random call failed");
+    u32::from_le_bytes([hash[0], hash[1], hash[2], hash[3]])
+}
+
+// mock for test
+#[cfg(test)]
+pub fn get_random_u32() -> u32 {
+    use getrandom::getrandom;
+    let mut buffer = [0u8; 4];
+    getrandom(&mut buffer).expect("Failed to generate random number");
+    u32::from_ne_bytes(buffer)
+}
+
+// 程序生成数, remaining是程序操作前剩余的数量, max_per_turn: 最大操作数量
+pub fn program_turn_gen(difficulty: DifficultyLevel, remaining: u32, max_per_turn: u32) -> u32 {
+    if remaining < max_per_turn {
+        return remaining;
+    }
+    if max_per_turn == 1 {
+        return 1;
+    }
+    match difficulty {
+        DifficultyLevel::Easy => {
+            let mut count = get_random_u32() % max_per_turn;
+            count += 1;
+            count
+        }
+        DifficultyLevel::Hard => {
+            // 9 % (5+1) = 3, 11 %(5+1)=5, 13%(5+1)=1
+            let mut count = remaining % (max_per_turn + 1);
+            // 没找到符合的,随机一个
+            if count == 0 {
+                count = get_random_u32() % max_per_turn;
+                count += 1;
+            }
+            count
         }
     }
 }

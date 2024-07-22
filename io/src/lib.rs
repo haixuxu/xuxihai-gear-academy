@@ -1,7 +1,5 @@
 #![no_std]
 
-mod test;
-
 use codec::{Decode, Encode};
 use gmeta::{In, InOut, Metadata, Out};
 use gstd::prelude::*;
@@ -64,49 +62,4 @@ impl Metadata for ProgramMetadata {
     type Reply = ();
     type Others = ();
     type Signal = ();
-}
-
-#[cfg(not(test))]
-pub fn get_random_u32() -> u32 {
-    use gstd::{exec, msg};
-
-    let salt = msg::id();
-    let (hash, _num) = exec::random(salt.into()).expect("internal error: random call failed");
-    u32::from_le_bytes([hash[0], hash[1], hash[2], hash[3]])
-}
-
-// mock for test
-#[cfg(test)]
-pub fn get_random_u32() -> u32 {
-    use getrandom::getrandom;
-    let mut buffer = [0u8; 4];
-    getrandom(&mut buffer).expect("Failed to generate random number");
-    u32::from_ne_bytes(buffer)
-}
-
-// 程序生成数
-pub fn program_turn_gen(difficulty: DifficultyLevel, remaining: u32, max_per_turn: u32) -> u32 {
-    if remaining < max_per_turn {
-        return remaining;
-    }
-    if max_per_turn == 1 {
-        return 1;
-    }
-    match difficulty {
-        DifficultyLevel::Easy => {
-            let mut count = get_random_u32() % max_per_turn;
-            count += 1;
-            count
-        }
-        DifficultyLevel::Hard => {
-            let mut count: u32 = 1;
-            for val in 1..max_per_turn {
-                if (remaining - val) % max_per_turn == 1 {
-                    count = val;
-                    break;
-                }
-            }
-            count
-        }
-    }
 }

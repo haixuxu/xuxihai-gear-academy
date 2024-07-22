@@ -20,6 +20,5 @@ fn program_gen_count() {
 
         let count4 = program_turn_gen(DifficultyLevel::Easy, 0, 3);
         assert_eq!(count4, 0);
-
     }
 }
